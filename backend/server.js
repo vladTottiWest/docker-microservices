@@ -26,3 +26,4 @@ app.get('/status', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Backend API running on port ${PORT}`);
 });
+ 
