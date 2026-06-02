@@ -5,35 +5,19 @@ on:
     branches: [ "main" ]
 
 jobs:
-  # Стадія 1: Збірка додатка
-  build-and-test:
+  build-and-deploy:
     runs-on: self-hosted
     steps:
       - name: Checkout коду
         uses: actions/checkout@v4
 
+      # Переходимо в папку backend і збираємо образ локально
       - name: Збірка Docker образу
         run: |
-          docker build -t {{ "${{ secrets.DOCKERHUB_USERNAME }}" }}/backend-api:latest ./backend
+          cd backend
+          docker build -t backend-api:latest .
 
-  # Стадія 2: Пуш у Docker Hub
-  push-to-registry:
-    needs: build-and-test
-    runs-on: self-hosted
-    steps:
-      - name: Авторизація в Docker Hub
-        run: |
-          echo "{{ "${{ secrets.DOCKERHUB_TOKEN }}" }}" | docker login -u "{{ "${{ secrets.DOCKERHUB_USERNAME }}" }}" --password-stdin
-
-      - name: Пуш образу
-        run: |
-          docker push {{ "${{ secrets.DOCKERHUB_USERNAME }}" }}/backend-api:latest
-
-  # Стадія 3: Деплой в локальний Kubernetes за допомогою Helm
-  deploy-to-k8s:
-    needs: push-to-registry
-    runs-on: self-hosted
-    steps:
+      # Оновлюємо наш додаток в Kubernetes через Helm
       - name: Деплой через Helm-чарт
         run: |
-          helm upgrade --install my-release ./my-app-chart --set image.repository={{ "${{ secrets.DOCKERHUB_USERNAME }}" }}/backend-api --set image.tag=latest
+          helm upgrade --install my-release my-app-chart --set image.repository=backend-api --set image.tag=latest
