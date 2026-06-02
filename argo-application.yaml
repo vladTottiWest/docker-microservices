@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: microservices-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/vladTottiWest/docker-microservices.git' # Твій репозиторій
+    targetRevision: HEAD
+    path: my-app-chart # Шлях до папки з твоїм Helm-чартом всередині репозиторію
+  destination:
+    server: 'https://kubernetes.default.svc' # Деплоїмо в цей же локальний кластер
+    namespace: default # Простір імен для твого додатка
+  syncPolicy:
+    automated:
+      prune: true     # Автоматично видаляти ресурси з K8s, якщо їх видалили з Git
+      selfHeal: true  # Якщо хтось вручну щось змінить в кластері, Argo поверне все назад, як у Git
