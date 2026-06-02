@@ -11,13 +11,13 @@ jobs:
       - name: Checkout коду
         uses: actions/checkout@v4
 
-      # Переходимо в папку backend і збираємо образ локально
+      # Чистий запуск збірки через PowerShell на твоєму ПК
       - name: Збірка Docker образу
         run: |
           cd backend
           docker build -t backend-api:latest .
 
-      # Оновлюємо наш додаток в Kubernetes через Helm
+      # Нативний деплой у локальний Kubernetes через Helm
       - name: Деплой через Helm-чарт
         run: |
-          helm upgrade --install my-release my-app-chart --set image.repository=backend-api --set image.tag=latest
+          helm upgrade --install my-release ./my-app-chart --set image.repository=backend-api --set image.tag=latestі
