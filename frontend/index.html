@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Мікросервісна Архітектура</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background: #f4f6f9; padding: 50px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; }
+        h1 { color: #2c3e50; }
+        #db-status { font-weight: bold; color: #27ae60; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Стек Мікросервісів працює!</h1>
+        <p>Статус запиту до API та БД: <span id="db-status">Завантаження...</span></p>
+    </div>
+
+    <script>
+        // Робимо запит до нашого backend сервісу через проксі Nginx
+        fetch('/api/status')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('db-status').innerText = `${data.message} (БД версія: ${data.dbVersion})`;
+            })
+            .catch(err => {
+                document.getElementById('db-status').innerText = 'Помилка з\'єднання з API';
+                document.getElementById('db-status').style.color = '#c0392b';
+            });
+    </script>
+</body>
+</html>

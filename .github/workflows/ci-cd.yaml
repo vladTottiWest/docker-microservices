@@ -1,0 +1,67 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout твого коду
+        uses: actions/checkout@v4
+
+      - name: Налаштування Node.js (для тестів)
+        uses: actions/setup-node@v4
+        with:
+          node-with: 18
+
+      - name: Встановлення залежностей та Тестування
+        run: |
+          cd backend
+          npm install
+          # npm test  # Запуск тестів, якщо вони прописані в package.json
+
+  push-to-registry:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout коду
+        uses: actions/checkout@v4
+
+      - name: Авторизація в Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: {{ "${{ secrets.DOCKERHUB_USERNAME }}" }}
+          password: {{ "${{ secrets.DOCKERHUB_TOKEN }}" }}
+
+      - name: Збірка та Пуш Docker образу
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: {{ "${{ secrets.DOCKERHUB_USERNAME }}" }}/backend-api:latest
+
+  deploy-to-k8s:
+    needs: push-to-registry
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout коду
+        uses: actions/checkout@v4
+
+      - name: Налаштування доступу до Kubernetes (Kubectl)
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: {{ "${{ secrets.KUBECONFIG }}" }}
+
+      - name: Встановлення та налаштування Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'v3.12.0'
+
+      - name: Деплой через Helm-чарт
+        run: |
+          helm upgrade --install my-release ./my-app-chart \
+            --set image.repository={{ "${{ secrets.DOCKERHUB_USERNAME }}" }}/backend-api \
+            --set image.tag=latest
